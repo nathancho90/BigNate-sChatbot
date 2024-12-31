@@ -1,1 +1,6 @@
-
+Flask
+openai
+python-dotenv
+transformers
+tokenizers
+tensorflow
