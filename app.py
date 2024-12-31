@@ -3,6 +3,10 @@ from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 import tensorflow as tf
+import tensorflow as tf
+tf.config.set_visible_devices([], 'GPU')
+physical_devices = tf.config.list_physical_devices('CPU')
+tf.config.set_virtual_device_configuration(physical_devices[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=256)])
 import openai
 
 # Load environment variables
