@@ -4,9 +4,20 @@ from dotenv import load_dotenv
 from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
 import tensorflow as tf
 import tensorflow as tf
-tf.config.set_visible_devices([], 'GPU')
-physical_devices = tf.config.list_physical_devices('CPU')
-tf.config.set_virtual_device_configuration(physical_devices[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=256)])
+import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU')
+if physical_devices:
+    try:
+        # Set memory growth to avoid using all the GPU memory
+        tf.config.experimental.set_memory_growth(physical_devices[0], True)
+        # Set virtual devices (if needed)
+        tf.config.set_logical_device_configuration(physical_devices[0],
+                                                   [tf.config.LogicalDeviceConfiguration(memory_limit=256)])
+    except RuntimeError as e:
+        print("Error setting GPU configuration:", e)
+else:
+    print("No GPU detected, using CPU.")
+
 import openai
 
 # Load environment variables
