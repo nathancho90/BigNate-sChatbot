@@ -3,5 +3,6 @@ openai
 python-dotenv
 transformers
 tokenizers
-tensorflow
 gunicorn
+tensorflow==2.12.0
+keras==2.12.0
