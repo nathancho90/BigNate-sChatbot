@@ -4,3 +4,4 @@ python-dotenv
 transformers
 tokenizers
 tensorflow
+gunicorn
