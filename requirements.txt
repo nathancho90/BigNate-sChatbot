@@ -4,6 +4,4 @@ python-dotenv
 transformers
 tokenizers
 gunicorn
-tensorflow==2.12.0
-keras==2.12.0
 torch
