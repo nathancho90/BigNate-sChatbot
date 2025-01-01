@@ -1,24 +1,9 @@
-import os
 from flask import Flask, request, jsonify
-from dotenv import load_dotenv
-from transformers import TFAutoModelForSequenceClassification, AutoTokenizer
-import tensorflow as tf
-import tensorflow as tf
-import tensorflow as tf
-physical_devices = tf.config.list_physical_devices('GPU')
-if physical_devices:
-    try:
-        # Set memory growth to avoid using all the GPU memory
-        tf.config.experimental.set_memory_growth(physical_devices[0], True)
-        # Set virtual devices (if needed)
-        tf.config.set_logical_device_configuration(physical_devices[0],
-                                                   [tf.config.LogicalDeviceConfiguration(memory_limit=256)])
-    except RuntimeError as e:
-        print("Error setting GPU configuration:", e)
-else:
-    print("No GPU detected, using CPU.")
-
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+import torch
 import openai
+from dotenv import load_dotenv
+import os
 
 # Load environment variables
 load_dotenv()
@@ -29,17 +14,17 @@ app = Flask(__name__)
 def initialize_transformer_pipeline():
     model_name = "j-hartmann/emotion-english-distilroberta-base"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = TFAutoModelForSequenceClassification.from_pretrained(model_name)
+    model = AutoModelForSequenceClassification.from_pretrained(model_name)
     return tokenizer, model
 
 tokenizer, model = initialize_transformer_pipeline()
 
 # Predict emotion
 def predict_emotion(text):
-    inputs = tokenizer(text, return_tensors="tf", truncation=True, padding=True, max_length=512)
-    outputs = model(inputs)
-    predictions = tf.nn.softmax(outputs.logits, axis=-1)
-    predicted_class = tf.argmax(predictions, axis=-1).numpy()[0]
+    inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
+    outputs = model(**inputs)
+    predictions = torch.nn.functional.softmax(outputs.logits, dim=-1)
+    predicted_class = torch.argmax(predictions, dim=-1).item()
     labels = model.config.id2label
     return labels[predicted_class]
 
@@ -57,7 +42,7 @@ def send_message():
 
         # Get response from OpenAI
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use the latest model
+            model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": user_message}],
             max_tokens=150,
         )
@@ -67,8 +52,6 @@ def send_message():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-import os
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
