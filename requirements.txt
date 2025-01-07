@@ -5,3 +5,4 @@ transformers
 tokenizers
 gunicorn
 torch
+flask-cors
