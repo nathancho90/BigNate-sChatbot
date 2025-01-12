@@ -46,6 +46,7 @@
     }
     .emotion {
       font-size: 20px;
+      margin-left: 10px;
     }
     input {
       width: calc(100% - 100px);
@@ -79,9 +80,9 @@
   </div>
 
   <script>
-    const API_URL_SEND = "https://bignate-schatbot.onrender.com/send_message";
-    const API_URL_PREDICT = "https://bignate-schatbot.onrender.com/predict_emotion";
+    const API_URL = "http://127.0.0.1:5000/process_message"; // Update this URL if running on a different server
 
+    // Add messages to the chat window
     function addMessage(content, sender, emotion = null) {
       const messagesDiv = document.getElementById("messages");
       const messageDiv = document.createElement("div");
@@ -96,46 +97,7 @@
       messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
     }
 
-    async function predictEmotion(message) {
-      try {
-        const response = await fetch(API_URL_PREDICT, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ message })
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch emotion prediction from server.");
-        }
-
-        const data = await response.json();
-
-        if (data.error) {
-          return { emotion: "Unknown", emoji: "🤔" };
-        } else {
-          const emotion = data.emotion;
-
-          // Map emotions to emojis
-          const emotionEmojis = {
-            joy: "😊",
-            sadness: "😢",
-            anger: "😠",
-            surprise: "😲",
-            fear: "😨",
-            love: "❤️",
-            default: "🤔"
-          };
-
-          const emoji = emotionEmojis[emotion.toLowerCase()] || emotionEmojis.default;
-          return { emotion, emoji };
-        }
-      } catch (error) {
-        return { emotion: "Error", emoji: "❌" };
-      }
-    }
-
+    // Send message to the server
     async function sendMessage() {
       const userInput = document.getElementById("user-input");
       const message = userInput.value.trim();
@@ -148,11 +110,8 @@
       // Clear input field
       userInput.value = "";
 
-      // Predict emotion separately
-      const { emotion, emoji } = await predictEmotion(message);
-
       try {
-        const response = await fetch(API_URL_SEND, {
+        const response = await fetch(API_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -170,9 +129,23 @@
           addMessage(`Error: ${data.error}`, "bot");
         } else {
           const botResponse = data.response;
+          const emotion = data.emotion;
+
+          // Map emotions to emojis
+          const emotionEmojis = {
+            joy: "😊",
+            sadness: "😢",
+            anger: "😠",
+            surprise: "😲",
+            fear: "😨",
+            love: "❤️",
+            default: "🤔"
+          };
+
+          const emoji = emotionEmojis[emotion.toLowerCase()] || emotionEmojis.default;
 
           // Add bot's response and emotion to chat
-          addMessage(`${botResponse} <br>(Emotion: ${emotion})`, "bot", emoji);
+          addMessage(`${botResponse}`, "bot", `${emotion} ${emoji}`);
         }
       } catch (error) {
         addMessage(`Error: ${error.message}`, "bot");
