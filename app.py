@@ -43,7 +43,7 @@ def send_message():
         emotion = predict_emotion(user_message)
 
         # Get response from OpenAI (updated for openai>=1.0.0)
-        response = openai.ChatCompletion.acreate(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "user", "content": user_message}
