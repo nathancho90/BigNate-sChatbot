@@ -30,8 +30,8 @@ def predict_emotion(text):
     labels = model.config.id2label
     return labels[predicted_class]
 
-@app.route("/send_message", methods=["POST"])
-def send_message():
+@app.route("/process_message", methods=["POST"])
+def process_message():
     data = request.json
     user_message = data.get("message")
 
@@ -39,6 +39,9 @@ def send_message():
         return jsonify({"error": "No message provided"}), 400
 
     try:
+        # Predict emotion
+        emotion = predict_emotion(user_message)
+
         # Get response from OpenAI (updated for openai>=1.0.0)
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -49,22 +52,7 @@ def send_message():
         )
         bot_response = response['choices'][0]['message']['content'].strip()
 
-        return jsonify({"response": bot_response})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/predict_emotion", methods=["POST"])
-def predict_emotion_route():
-    data = request.json
-    user_message = data.get("message")
-
-    if not user_message:
-        return jsonify({"error": "No message provided"}), 400
-
-    try:
-        emotion = predict_emotion(user_message)
-        return jsonify({"emotion": emotion})
+        return jsonify({"response": bot_response, "emotion": emotion})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -72,4 +60,5 @@ def predict_emotion_route():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
