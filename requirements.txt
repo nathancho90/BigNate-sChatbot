@@ -1,5 +1,5 @@
 Flask
-openai==0
+openai==0.26.0
 python-dotenv
 transformers
 tokenizers
