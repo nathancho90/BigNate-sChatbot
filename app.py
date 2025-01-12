@@ -42,10 +42,12 @@ def send_message():
         # Predict emotion
         emotion = predict_emotion(user_message)
 
-        # Get response from OpenAI
-        response = openai.ChatCompletion.create(
+        # Get response from OpenAI (updated for openai>=1.0.0)
+        response = openai.ChatCompletion.acreate(
             model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": user_message}],
+            messages=[
+                {"role": "user", "content": user_message}
+            ],
             max_tokens=150,
         )
         bot_response = response['choices'][0]['message']['content'].strip()
