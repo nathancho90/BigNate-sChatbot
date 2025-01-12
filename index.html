@@ -1,120 +1,183 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emotion-Based Chatbot</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            height: 100%;
-            padding: 20px;
-        }
-        .message {
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 10px;
-            max-width: 60%;
-        }
-        .user-message {
-            align-self: flex-end;
-            background-color: #007bff;
-            color: white;
-        }
-        .bot-message {
-            align-self: flex-start;
-            background-color: #e4e6eb;
-        }
-        .emotion {
-            font-size: 0.8rem;
-            margin-top: 5px;
-            text-align: right;
-        }
-        .input-container {
-            display: flex;
-            border-top: 1px solid #ccc;
-            padding: 10px;
-        }
-        .input-container input {
-            flex: 1;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            margin-right: 10px;
-        }
-        .input-container button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emotion Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f4f4f9;
+    }
+    .chat-container {
+      width: 90%;
+      max-width: 600px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      padding: 20px;
+    }
+    .messages {
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 10px;
+      background-color: #fafafa;
+    }
+    .message {
+      margin-bottom: 15px;
+    }
+    .user {
+      text-align: right;
+      color: #1e88e5;
+    }
+    .bot {
+      text-align: left;
+      color: #5a5a5a;
+    }
+    .emotion {
+      font-size: 20px;
+    }
+    input {
+      width: calc(100% - 100px);
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+    button {
+      width: 80px;
+      padding: 10px;
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+  </style>
 </head>
 <body>
-    <div class="chat-container" id="chat-container">
-        <!-- Messages are added here -->
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <div>
+      <input type="text" id="user-input" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
     </div>
-    <div class="input-container">
-        <input type="text" id="message-input" placeholder="Type a message...">
-        <button onclick="sendMessage()">Send</button>
-    </div>
+  </div>
 
-    <script>
-        const chatContainer = document.getElementById('chat-container');
-        const messageInput = document.getElementById('message-input');
+  <script>
+    const API_URL_SEND = "https://big-nate-s-chatbot.vercel.app/send_message";
+    const API_URL_PREDICT = "https://big-nate-s-chatbot.vercel.app/predict_emotion";
 
-        async function sendMessage() {
-            const userMessage = messageInput.value.trim();
-            if (!userMessage) return;
+    function addMessage(content, sender, emotion = null) {
+      const messagesDiv = document.getElementById("messages");
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message", sender);
 
-            // Print the message from the user input field.
-            appendMessage(userMessage, 'user-message');
+      if (emotion) {
+        content += ` <span class="emotion">${emotion}</span>`;
+      }
 
-            // Make room for the next message.
-            messageInput.value = '';
+      messageDiv.innerHTML = content;
+      messagesDiv.appendChild(messageDiv);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
+    }
 
-            try {
-                const response = await fetch('https://bignate-schatbot.onrender.com/send_message', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: userMessage }),
-                });
+    async function predictEmotion(message) {
+      try {
+        const response = await fetch(API_URL_PREDICT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
 
-                if (!response.ok) throw new Error('Failed to fetch response from server');
-
-                const data = await response.json();
-
-                const botMessage = `${data.response} \n (Emotion: ${data.emotion})`;
-                appendMessage(botMessage, 'bot-message');
-            } catch (error) {
-                appendMessage('Error: Unable to fetch response. Please try again.', 'bot-message');
-            }
+        if (!response.ok) {
+          throw new Error("Failed to fetch emotion prediction from server.");
         }
 
-        function appendMessage(text, className) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${className}`;
-            messageDiv.innerText = text;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+        const data = await response.json();
+
+        if (data.error) {
+          return { emotion: "Unknown", emoji: "🤔" };
+        } else {
+          const emotion = data.emotion;
+
+          // Map emotions to emojis
+          const emotionEmojis = {
+            joy: "😊",
+            sadness: "😢",
+            anger: "😠",
+            surprise: "😲",
+            fear: "😨",
+            love: "❤️",
+            default: "🤔"
+          };
+
+          const emoji = emotionEmojis[emotion.toLowerCase()] || emotionEmojis.default;
+          return { emotion, emoji };
         }
-    </script>
+      } catch (error) {
+        return { emotion: "Error", emoji: "❌" };
+      }
+    }
+
+    async function sendMessage() {
+      const userInput = document.getElementById("user-input");
+      const message = userInput.value.trim();
+
+      if (!message) return;
+
+      // Add user's message to chat
+      addMessage(message, "user");
+
+      // Clear input field
+      userInput.value = "";
+
+      // Predict emotion separately
+      const { emotion, emoji } = await predictEmotion(message);
+
+      try {
+        const response = await fetch(API_URL_SEND, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch response from server.");
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          addMessage(`Error: ${data.error}`, "bot");
+        } else {
+          const botResponse = data.response;
+
+          // Add bot's response and emotion to chat
+          addMessage(`${botResponse} <br>(Emotion: ${emotion})`, "bot", emoji);
+        }
+      } catch (error) {
+        addMessage(`Error: ${error.message}`, "bot");
+      }
+    }
+  </script>
 </body>
 </html>
