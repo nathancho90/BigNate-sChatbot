@@ -48,7 +48,7 @@ def process_message():
             messages=[
                 {"role": "user", "content": user_message}
             ],
-            max_tokens=200,
+            max_tokens=1000,
         )
         bot_response = response['choices'][0]['message']['content'].strip()
 
