@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 import os
 from flask_cors import CORS
 
-# Load environment variables
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -21,7 +20,6 @@ def initialize_transformer_pipeline():
 
 tokenizer, model = initialize_transformer_pipeline()
 
-# Predict emotion
 def predict_emotion(text):
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
     outputs = model(**inputs)
